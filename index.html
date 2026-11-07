@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#082520">
+<title>XB Global · Control LED</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#082520;--card:#0e322b;--line:#1b4a40;--txt:#eaf4ef;--mut:#8fb3a8;--acc:#6fd0b2;--brand:#0b4239;--warn:#ffc46b;--err:#ff7b7b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);padding-bottom:76px}
+header{position:sticky;top:0;z-index:5;background:rgba(8,37,32,.96);backdrop-filter:blur(6px);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+header h1{font-size:12px;margin:0;flex:1;letter-spacing:.32em;color:var(--mut);font-weight:500}
+header img{height:30px}
+.pill{font-size:12px;padding:4px 9px;border-radius:99px;background:var(--line);color:var(--mut)}
+.pill.ok{background:#155445;color:var(--acc)}
+main{padding:14px;max-width:560px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+h2{font-size:15px;margin:0 0 10px}
+small,.mut{color:var(--mut);font-size:12.5px}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--line);color:var(--txt);cursor:pointer}
+button.pri{background:var(--acc);color:#062a23;font-weight:600}
+button.ghost{background:transparent;border:1px solid var(--line)}
+button.danger{background:#3a1717;color:var(--err)}
+button:disabled{opacity:.45}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
+input,select{font:inherit;background:#072019;color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
+label{display:block;font-size:12.5px;color:var(--mut);margin:8px 0 4px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#0a2b25;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border-radius:0;padding:14px 4px;color:var(--mut);font-size:13.5px}
+nav button.on{color:var(--acc);box-shadow:inset 0 2px 0 var(--acc)}
+.stage{display:flex;gap:14px;align-items:flex-start}
+.stage svg{width:46%;max-width:210px;flex:none;touch-action:manipulation}
+.zone{cursor:pointer}
+.zonebtns{display:flex;flex-direction:column;gap:8px;flex:1}
+.zb{text-align:left;display:flex;align-items:center;gap:10px;border:2px solid transparent}
+.zb.sel{border-color:var(--acc)}
+.dot{width:20px;height:20px;border-radius:50%;flex:none;border:2px solid #0006}
+.sw{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin:10px 0}
+.sw b{aspect-ratio:1;border-radius:50%;cursor:pointer;border:2px solid #fff2}
+input[type=range]{padding:0;accent-color:var(--acc)}
+input[type=color]{height:44px;padding:3px}
+.drv{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.drv:first-of-type{border-top:0}
+.st{width:9px;height:9px;border-radius:50%;background:#555;flex:none}
+.st.on{background:var(--acc);box-shadow:0 0 6px var(--acc)}
+.st.busy{background:var(--warn)}
+.grpchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.chip{white-space:nowrap;padding:7px 12px;border-radius:99px;background:var(--line);font-size:13px}
+.chip.on{background:var(--acc);color:#062a23;font-weight:600}
+.chip small{color:inherit;opacity:.7}
+dialog{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:14px;width:min(92vw,440px)}
+dialog::backdrop{background:#000a}
+#toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:#000d;padding:9px 14px;border-radius:10px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;max-width:90vw}
+#toast.show{opacity:1}
+.hide{display:none!important}
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.th{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px;font-size:12.5px;line-height:1.25;border:2px solid transparent}
+.th.on{border-color:var(--acc)}
+.mini{width:34px;height:62px;border-radius:3px;background:#0a0d0e;padding:4px;display:flex;align-items:center;justify-content:center}
+.mini span{width:100%;height:100%;border:3px solid;display:flex;align-items:center;justify-content:center;background:#e9eeee}
+.mini i{width:12px;height:12px;border-radius:50%}
+#splash{position:fixed;inset:0;z-index:50;background:#f8f8f8;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s}
+#splash img{width:min(72vw,340px);animation:sp 1.4s ease-out both}
+#splash i{margin-top:28px;width:40px;height:2px;background:#0b4239;animation:ld 1.2s .3s ease-in-out infinite alternate}
+@keyframes sp{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@keyframes ld{from{width:20px;opacity:.3}to{width:90px;opacity:1}}
+#splash.out{opacity:0;pointer-events:none}
+.seg{display:flex;gap:6px}.seg button{flex:1}.seg button.on{background:var(--acc);color:#062a23;font-weight:600}
+.preview{margin-top:10px;font-size:20px;font-weight:600;color:var(--acc)}
+.warnbox{background:#3a2a10;color:#ffd99a;border-radius:10px;padding:10px;font-size:13px;margin-bottom:12px}
+code{background:#072019;padding:1px 5px;border-radius:5px}
+</style>
+</head>
+<body>
+<div id="splash"><img src="logo-verde.png" alt="XB Global"><i></i></div>
+<header>
+  <img src="logo-claro.png" alt="XB Global">
+  <h1>CONTROL LED</h1>
+  <span id="btState" class="pill">Sin conexión</span>
+</header>
+
+<main>
+<div id="noBt" class="warnbox hide">Bluetooth no disponible en este dispositivo. Usa un teléfono Android con Bluetooth activado. Mientras tanto puedes usar la vista previa.</div>
+
+<!-- ================= PANTALLA CONTROL ================= -->
+<section id="pControl">
+  <div class="grpchips" id="grpChips"></div>
+
+  <div class="card">
+    <div class="stage">
+      <svg id="disp" viewBox="0 0 200 440" aria-label="Exhibidor">
+        <defs>
+          <filter id="glowM" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="glowC" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <linearGradient id="panelG" x1="0" x2="1"><stop offset="0" stop-color="#f4f7f7"/><stop offset=".5" stop-color="#e6ecec"/><stop offset="1" stop-color="#f1f5f5"/></linearGradient>
+          <clipPath id="panelClip"><rect x="26" y="26" width="148" height="388"/></clipPath>
+          <radialGradient id="discG"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9eeee"/></radialGradient>
+        </defs>
+        <!-- carcasa negra -->
+        <rect x="6" y="6" width="188" height="428" rx="3" fill="#0a0d0e"/>
+        <!-- MARCO iluminado -->
+        <g class="zone" data-zone="marco">
+          <rect id="marcoGlow" x="17" y="17" width="166" height="406" fill="none" stroke-width="9" filter="url(#glowM)"/>
+          <rect id="marcoCore" x="17" y="17" width="166" height="406" fill="none" stroke-width="3"/>
+        </g>
+        <!-- panel con ondas -->
+        <rect x="26" y="26" width="148" height="388" fill="url(#panelG)"/>
+        <g id="waves" clip-path="url(#panelClip)" fill="none" stroke="#c3cdcd" stroke-width="1.1" opacity=".9"></g>
+        <rect id="marcoInner" x="26" y="26" width="148" height="388" fill="none" stroke-width="6" opacity=".35" filter="url(#glowM)" clip-path="url(#panelClip)" pointer-events="none"/>
+        <!-- CENTRO (insignia) -->
+        <g class="zone" data-zone="centro">
+          <path id="badgeGlow" d="M100 186 L142 262 L58 262 Z" stroke-width="44" stroke-linejoin="round" filter="url(#glowC)" opacity=".75"/>
+          <path id="badge" d="M100 186 L142 262 L58 262 Z" stroke-width="40" stroke-linejoin="round"/>
+          <circle cx="100" cy="240" r="35" fill="url(#discG)"/>
+          <circle id="ring" cx="100" cy="240" r="31" fill="none" stroke-width="2"/>
+        </g>
+      </svg>
+      <div class="zonebtns">
+        <button class="zb sel" data-zone="marco"><span class="dot" id="dotM"></span><span class="grow">Perímetro<br><small id="infM"></small></span></button>
+        <button class="zb" data-zone="centro"><span class="dot" id="dotC"></span><span class="grow">Q (centro)<br><small id="infC"></small></span></button>
+        <button class="zb" data-zone="ambos"><span class="dot" style="background:conic-gradient(var(--acc) 0 50%,#fff 0)"></span><span class="grow">Ambos</span></button>
+        <div class="row" style="margin-top:4px">
+          <button class="grow" id="bOn">Encender</button>
+          <button class="grow" id="bOff">Apagar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Temas</h2>
+    <div class="themes" id="themes"></div>
+  </div>
+
+  <div class="card">
+    <h2>Color · <span id="zoneLbl">Perímetro</span></h2>
+    <div class="sw" id="sw"></div>
+    <div class="row"><input type="color" id="picker" class="grow" value="#41ffe6"></div>
+    <label>Brillo <span id="brVal">100</span>%</label>
+    <input type="range" id="bright" min="0" max="100" value="100">
+  </div>
+
+  <div class="card">
+    <h2>Efectos</h2>
+    <select id="effect">
+      <option value="">— Color fijo —</option>
+      <optgroup label="Respiración (la hace la app)">
+        <option value="breath">Respiración · color elegido</option>
+        <option value="pulse">Pulso suave · color elegido</option>
+      </optgroup>
+      <optgroup label="Salto">
+        <option value="135">Salto RGB</option>
+        <option value="136">Salto 7 colores</option>
+      </optgroup>
+      <optgroup label="Degradado">
+        <option value="137">Degradado RGB</option>
+        <option value="138">Degradado 7 colores</option>
+        <option value="146">Degradado rojo-verde</option>
+        <option value="147">Degradado rojo-azul</option>
+        <option value="148">Degradado verde-azul</option>
+      </optgroup>
+      <optgroup label="Flash">
+        <option value="149">Flash 7 colores</option>
+        <option value="150">Flash rojo</option>
+        <option value="151">Flash verde</option>
+        <option value="152">Flash azul</option>
+        <option value="153">Flash amarillo</option>
+        <option value="154">Flash cian</option>
+        <option value="155">Flash magenta</option>
+        <option value="156">Flash blanco</option>
+      </optgroup>
+    </select>
+    <label>Velocidad <span id="spVal">50</span>%</label>
+    <input type="range" id="speed" min="0" max="100" value="50">
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="pri grow" id="bConnGroup">Conectar este grupo</button>
+      <label class="row" style="margin:0;gap:6px"><input type="checkbox" id="allGroups" style="width:auto"> Todos los grupos</label>
+    </div>
+    <small style="display:block;margin-top:8px">Cada exhibidor junta solo su <b>Q</b> y su <b>Perímetro</b> por el número (ej. <code>Q XB1</code> + <code>Perímetro XB1</code>).</small>
+  </div>
+</section>
+
+<!-- ================= PANTALLA DRIVERS ================= -->
+<section id="pDrivers" class="hide">
+  <div class="card">
+    <h2>Drivers</h2>
+    <div class="row">
+      <button class="pri grow" id="bAdd">+ Agregar driver</button>
+      <button id="bReconn">Reconectar todos</button>
+    </div>
+    <small style="display:block;margin-top:8px">Nombra cada driver como <code>Q XB1</code> o <code>Perímetro XB1</code>. Los que tienen el mismo número se enlazan solos como un exhibidor.</small>
+  </div>
+  <div class="card" id="drvList"></div>
+  <div class="card">
+    <h2>Respaldo</h2>
+    <div class="row">
+      <button class="grow" id="bExport">Exportar lista</button>
+      <button class="grow" id="bImport">Importar lista</button>
+      <input type="file" id="fImport" accept=".json" class="hide">
+    </div>
+  </div>
+</section>
+
+<!-- ================= PANTALLA AJUSTES ================= -->
+<section id="pAjustes" class="hide">
+  <div class="card">
+    <h2>Ayuda</h2>
+    <p class="mut">Antes de conectar, cierra cualquier otra aplicación de control de iluminación: cada driver acepta un solo teléfono a la vez.</p>
+    <p class="mut">Para dar de alta un driver, enciende solo ese exhibidor, toca <b>Agregar driver</b> y elige el que aparezca. El driver parpadea 3 veces para confirmarlo.</p>
+    <p class="mut">Si al probar no ves rojo, verde y azul en ese orden, ajusta el <b>orden de color</b> del driver.</p>
+  </div>
+  <div class="card">
+    <h2>Búsqueda ampliada</h2>
+    <label class="row" style="color:var(--txt)"><input type="checkbox" id="optAll" style="width:auto"> Mostrar todos los dispositivos Bluetooth al buscar</label>
+  </div>
+  <div class="card">
+    <h2>Acerca de</h2>
+    <p class="mut" style="margin:0">XB Global · Control LED<br>Versión 1.0<br>© 2026 XB Global · Premium Visibility</p>
+  </div>
+  <div class="card">
+    <button class="danger" id="bWipe">Borrar todos los datos</button>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button class="on" data-p="pControl">Control</button>
+  <button data-p="pDrivers">Drivers</button>
+  <button data-p="pAjustes">Ajustes</button>
+</nav>
+
+<dialog id="dlg">
+  <form method="dialog" id="dlgForm">
+    <h2 id="dlgTitle">Driver</h2>
+    <small id="dlgDev"></small>
+    <label>Tipo</label>
+    <div class="seg" id="fType"><button type="button" data-t="Q">Q (centro)</button><button type="button" data-t="Perímetro">Perímetro</button></div>
+    <label>Exhibidor</label>
+    <input id="fGroup" required placeholder="XB1" style="text-transform:uppercase">
+    <div class="preview" id="fPrev">Q XB1</div>
+    <small id="fPair"></small>
+    <label>Orden de color</label>
+    <select id="fOrder"><option>RGB</option><option>RBG</option><option>GRB</option><option>GBR</option><option>BRG</option><option>BGR</option></select>
+    <label>Compatibilidad</label>
+    <select id="fProto">
+      <option value="auto">Automático</option>
+      <option value="a">Tipo A</option>
+      <option value="b">Tipo B</option>
+    </select>
+    <div class="row" style="margin-top:14px">
+      <button type="button" class="ghost" id="dlgTest">Probar</button>
+      <span class="grow"></span>
+      <button value="cancel" formnovalidate>Cancelar</button>
+      <button value="ok" class="pri">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+function hideSplash(){ const e=document.getElementById('splash'); if(!e||e._h) return; e._h=1; e.classList.add('out'); setTimeout(()=>e.remove(),700); }
+setTimeout(hideSplash,2000);
+window.addEventListener('error',()=>setTimeout(hideSplash,300));
+/* ===================== Utilidades ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const toast = (m, t=2200) => { const e=$('#toast'); e.textContent=m; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),t); };
+const hex2rgb = h => [1,3,5].map(i=>parseInt(h.substr(i,2),16));
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const LS = 'exhibidorLED.v1';
+
+/* ===================== Estado ===================== */
+let S = { drivers:{}, groups:{}, current:null, zone:'marco', allDevices:false };
+// drivers: id -> {name, code, order, proto, devName}
+// groups: code -> {marco:{color,bright,on,effect}, centro:{...}}
+try { Object.assign(S, JSON.parse(localStorage.getItem(LS)||'{}')); } catch(e){}
+// migración: respiraciones viejas del driver (139-145) → respiración de la app
+for(const g of Object.values(S.groups||{})) for(const z of Object.values(g||{})) if(z && z.effect && /^(139|14[0-5])$/.test(String(z.effect))){ const cols={139:'#ff0000',140:'#00ff00',141:'#0000ff',142:'#ffff00',143:'#00ffff',144:'#ff00ff',145:'#ffffff'}; z.color=cols[z.effect]; z.effect='breath'; }
+const save = () => { try{ localStorage.setItem(LS, JSON.stringify({drivers:S.drivers,groups:S.groups,current:S.current,allDevices:S.allDevices})); }catch(e){} };
+const live = {}; // id -> {device, char, proto, busy, queue}
+
+const norm = c => (c||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+const parseCode = c => {
+  c = norm(c);
+  let m = c.match(/^(Q|CENTRO|C)[\s\-_:]*(.+)$/);
+  if(m) return {group:m[2].replace(/[\s\-_]/g,''), zone:'centro'};
+  m = c.match(/^(PERIMETROS?|PERIM|PER|P|MARCO|M)[\s\-_:]*(.+)$/);
+  if(m) return {group:m[2].replace(/[\s\-_]/g,''), zone:'marco'};
+  m = c.match(/^(.+?)[-_ ](M|C)$/);
+  if(m) return {group:m[1].replace(/[\s\-_]/g,''), zone:m[2]==='C'?'centro':'marco'};
+  return {group:c.replace(/[\s\-_]/g,'')||'SINGRUPO', zone:'marco'};
+};
+const nameFor = (t,g) => t+' '+norm(g).replace(/^([A-Z]+)\s*(\d)/,'$1$2');
+function pairMark(g){ const q=driversOf(g,'centro').length, p=driversOf(g,'marco').length; return (q&&p)?'<small style="color:var(--acc)">✓ par completo</small>':`<small style="color:var(--warn)">falta ${q?'Perímetro':'Q'}</small>`; }
+const defZone = () => ({color:'#41ffe6', bright:100, on:true, effect:'', speed:50});
+function groupList(){
+  const set = new Set(Object.keys(S.groups));
+  Object.values(S.drivers).forEach(d=>set.add(parseCode(d.code).group));
+  if(!set.size) set.add('DEMO');
+  return [...set].sort();
+}
+function G(code){
+  if(!S.groups[code]) S.groups[code] = {marco:defZone(), centro:{...defZone(), color:'#ffffff'}};
+  return S.groups[code];
+}
+
+/* ===================== Protocolo del driver ===================== */
+const SVC = [0xfff0, 0xffe0, 0xffd0, 0xffd5, 0xffe5];
+const NAME_PREFIX = ['ELK','MELK','BLEDOM','LEDBLE','ELK-BLE','QHM','LEDBlue','BLE-LED','Triones','LED'];
+function orderRGB(rgb, order){ const map={R:rgb[0],G:rgb[1],B:rgb[2]}; return order.split('').map(k=>map[k]); }
+function pkt(v, body){ // body: 7 bytes después de 7E <v>
+  return new Uint8Array([0x7E, v, ...body, 0xEF]);
+}
+const P = {
+  on:   v => v===0x07 ? pkt(0x04,[0x04,0xF0,0x00,0x01,0xFF,0x00]) : pkt(0x00,[0x04,0xF0,0x00,0x01,0xFF,0x00]),
+  off:  v => v===0x07 ? pkt(0x04,[0x04,0x00,0x00,0x00,0xFF,0x00]) : pkt(0x00,[0x04,0x00,0x00,0x00,0xFF,0x00]),
+  color:(v,r,g,b) => v===0x07 ? pkt(0x07,[0x05,0x03,r,g,b,0x10]) : pkt(0x00,[0x05,0x03,r,g,b,0x00]),
+  bright:(v,x) => v===0x07 ? pkt(0x04,[0x01,x,0x01,0xFF,0xFF,0x00]) : pkt(0x00,[0x01,x,0x00,0x00,0x00,0x00]),
+  effect:(v,m) => pkt(v===0x07?0x07:0x00,[0x03,m,0x03,0x00,0x00,0x00]),
+  speed:(v,s) => pkt(v===0x07?0x04:0x00,[0x02,s,0x00,0x00,0x00,0x00]),
+};
+function protoVariant(id){
+  const d=S.drivers[id]||{}, L=live[id];
+  if(d.proto==='a') return 0x00;
+  if(d.proto==='b') return 0x07;
+  const n=(L?.device?.name||d.devName||'').toUpperCase();
+  return (n.startsWith('MELK')||n.startsWith('ELK-BLE')&&!n.startsWith('ELK-BLEDOM')) ? 0x07 : 0x00;
+}
+
+const isSW = z => z.effect==='breath'||z.effect==='pulse';
+// Envío por driver sin filas: por cada tipo de comando solo se guarda el ÚLTIMO pendiente.
+// Así un cambio de tema/efecto nunca espera detrás de comandos viejos.
+const KEY={0x04:'power',0x05:'color',0x01:'bright',0x03:'effect',0x02:'speed'};
+async function pump(id){
+  const L=live[id]; if(!L || L.pumping) return; L.pumping=true;
+  try{
+    while(L.char && L.cmds && L.cmds.size){
+      const [k,bytes]=L.cmds.entries().next().value; L.cmds.delete(k);
+      try{
+        const pr=L.char.properties;
+        if(pr.writeWithoutResponse && L.char.writeValueWithoutResponse) await L.char.writeValueWithoutResponse(bytes);
+        else await L.char.writeValue(bytes);
+      }catch(e){ console.warn('write',e); }
+      await sleep(40);
+    }
+  } finally { L.pumping=false; }
+}
+function write(id, bytes, fast=false){
+  const L=live[id]; if(!L?.char) return Promise.resolve(false);
+  L.cmds = L.cmds || new Map();
+  const now=performance.now();
+  if(fast){ if(L.cmds.size || L.pumping || now<(L.hold||0)) return Promise.resolve(false); }
+  else L.hold = now+400;
+  let k = KEY[bytes[2]] || ('x'+bytes.join(''));
+  if(k==='color') L.cmds.delete('effect');      // el último entre color fijo y efecto gana
+  if(k==='effect') L.cmds.delete('color');
+  L.cmds.delete(k); L.cmds.set(k, bytes);
+  if(k==='power' && L.cmds.size>1){ const rest=[...L.cmds].filter(([x])=>x!=='power'); L.cmds=new Map([['power',bytes],...rest]); }
+  pump(id);
+  return Promise.resolve(true);
+}
+
+/* ===================== Conexión BLE ===================== */
+const hasBT = !!navigator.bluetooth;
+if(!hasBT) $('#noBt').classList.remove('hide');
+
+async function pickDevice(){
+  const opts = S.allDevices
+    ? {acceptAllDevices:true, optionalServices:SVC}
+    : {filters:NAME_PREFIX.map(n=>({namePrefix:n})), optionalServices:SVC};
+  return navigator.bluetooth.requestDevice(opts);
+}
+
+async function connect(device){
+  const id=device.id;
+  live[id] = live[id] || {};
+  const L=live[id]; L.device=device; L.state='busy'; renderDrivers(); renderStatus();
+  if(!device._listen){ device.addEventListener('gattserverdisconnected',()=>{L.char=null;L.state='off';renderDrivers();renderStatus();}); device._listen=true; }
+  try{
+    let server;
+    for(let i=0;i<3;i++){ try{ server=await device.gatt.connect(); break; }catch(e){ if(i===2) throw e; await sleep(600); } }
+    let ch=null;
+    for(const s of SVC){
+      try{
+        const svc=await server.getPrimaryService(s);
+        const chars=await svc.getCharacteristics();
+        ch = chars.find(c=>c.uuid.startsWith('0000fff3')) || chars.find(c=>c.uuid.startsWith('0000ffe1')||c.uuid.startsWith('0000ffd9')||c.uuid.startsWith('0000ffe9'))
+           || chars.find(c=>c.properties.write||c.properties.writeWithoutResponse);
+        if(ch) break;
+      }catch(e){}
+    }
+    if(!ch) throw new Error('No se encontró la característica de escritura');
+    L.char=ch; L.state='on';
+    if(protoVariant(id)===0x07){ await write(id,new Uint8Array([0x7E,0x07,0x83])); await write(id,new Uint8Array([0x7E,0x04,0x04])); }
+    renderDrivers(); renderStatus();
+    return true;
+  }catch(e){
+    L.state='off'; renderDrivers(); renderStatus();
+    toast('No conectó '+(S.drivers[id]?.name||device.name)+': '+e.message, 3500);
+    return false;
+  }
+}
+
+async function getKnownDevices(){
+  if(!navigator.bluetooth?.getDevices) return [];
+  try{ return await navigator.bluetooth.getDevices(); }catch(e){ return []; }
+}
+
+async function reconnectIds(ids){
+  const known = await getKnownDevices();
+  let missing=[];
+  for(const id of ids){
+    if(live[id]?.char) continue;
+    const dev = live[id]?.device || known.find(d=>d.id===id);
+    if(dev) await connect(dev); else missing.push(id);
+  }
+  if(missing.length){
+    toast(`Selecciona ${missing.length===1?'el driver':'los drivers'}: ${missing.map(i=>S.drivers[i].name).join(', ')}`, 3500);
+    for(const id of missing){
+      try{
+        const dev=await pickDevice();
+        if(!S.drivers[dev.id]){ await registerNew(dev); }
+        else await connect(dev);
+      }catch(e){ break; }
+    }
+  }
+}
+
+/* ===================== Envío al grupo ===================== */
+function driversOf(group, zone){
+  return Object.entries(S.drivers).filter(([id,d])=>{ const p=parseCode(d.code); return p.group===group && (zone==='ambos'||p.zone===zone); }).map(([id])=>id);
+}
+function targetGroups(){ return $('#allGroups').checked ? groupList() : [S.current]; }
+function targetZones(){ return S.zone==='ambos' ? ['marco','centro'] : [S.zone]; }
+
+async function sendZone(group, zone, what){
+  const z=G(group)[zone];
+  for(const id of driversOf(group, zone)){
+    if(!live[id]?.char) continue;
+    const v=protoVariant(id), d=S.drivers[id];
+    if(isSW(z) && z.on && what!=='power' && what!=='bright' && what!=='effect' && what!=='all') continue;
+    if(what==='power'){ await write(id, z.on?P.on(v):P.off(v)); if(z.on) what='all'; else continue; }
+    if(what==='color'||what==='all'){
+      if(z.effect && !isSW(z) && what==='all'){ await write(id,P.effect(v,+z.effect)); await write(id,P.speed(v,z.speed)); }
+      else { const [r,g,b]=orderRGB(hex2rgb(z.color), d.order||'RGB'); await write(id,P.color(v,r,g,b)); }
+    }
+    if(what==='bright'||what==='all') await write(id,P.bright(v,z.bright));
+    if(what==='effect'){ if(z.effect && !isSW(z)){ await write(id,P.bright(v,z.bright)); await write(id,P.effect(v,+z.effect)); await write(id,P.speed(v,z.speed)); } else { const [r,g,b]=orderRGB(hex2rgb(z.color), d.order||'RGB'); await write(id,P.color(v,r,g,b)); } }
+    if(what==='speed') await write(id,P.speed(v,z.speed));
+  }
+}
+let thr={};
+function apply(what, mutate){
+  for(const g of targetGroups()) delete G(g).theme;
+  for(const g of targetGroups()) for(const zn of targetZones()){ mutate(G(g)[zn]); for(const id of driversOf(g,zn)) if(live[id]) live[id].hold=performance.now()+600; }
+  save(); renderDisplay();
+  clearTimeout(thr[what]);
+  thr[what]=setTimeout(async()=>{ for(const g of targetGroups()) for(const zn of targetZones()) await sendZone(g,zn,what); }, 70);
+}
+
+
+/* ===================== Respiración por software ===================== */
+function breathLevel(z, t){
+  const period = 6000 - z.speed*50;           // 6 s (lento) … 1 s (rápido)
+  const x = (t % period) / period;
+  if(z.effect==='pulse') return 0.15 + 0.85*Math.pow(Math.sin(Math.PI*x),2);
+  return 0.02 + 0.98*Math.pow(Math.sin(Math.PI*x),3); // casi apaga y vuelve a subir
+}
+setInterval(()=>{
+  const t=performance.now();
+  for(const g of Object.keys(S.groups)) for(const zn of ['marco','centro']){
+    const z=S.groups[g][zn]; if(!z.on || !isSW(z)) continue;
+    const k=breathLevel(z,t);
+    for(const id of driversOf(g,zn)){
+      const L=live[id]; if(!L?.char || t-(L.last||0)<110) continue; L.last=t;
+      const [r,gg,b]=orderRGB(hex2rgb(z.color).map(v=>Math.round(v*k)), S.drivers[id].order||'RGB');
+      write(id,P.color(protoVariant(id),r,gg,b),true);
+    }
+  }
+}, 60);
+
+
+/* ===================== Temas ===================== */
+const BRAND='#41ffe6';
+const colorName=c=>c.toLowerCase()===BRAND?'IQOS':c.toUpperCase();
+const THEMES=[
+  {id:'t1', name:'IQOS total', c:{color:BRAND,bright:100,effect:''}, m:{color:BRAND,bright:70,effect:''}},
+  {id:'t2', name:'Q blanco + IQOS', c:{color:'#ffffff',bright:100,effect:''}, m:{color:BRAND,bright:70,effect:''}},
+  {id:'t3', name:'IQOS + degradado', c:{color:BRAND,bright:100,effect:''}, m:{color:BRAND,bright:70,effect:'138'}},
+];
+$('#themes').innerHTML=THEMES.map(t=>{
+  const per = t.m.effect ? 'border-image:linear-gradient(red,orange,yellow,lime,cyan,blue,magenta) 1' : `border-color:${t.m.color}`;
+  return `<button class="th" data-t="${t.id}"><span class="mini"><span style="${per};opacity:${t.m.effect?1:.85}"><i style="background:${t.c.color};box-shadow:0 0 6px ${t.c.color}"></i></span></span>${t.name}<small>Q ${t.c.bright}% · P ${t.m.bright}%</small></button>`;
+}).join('');
+$('#themes').onclick=async e=>{
+  const b=e.target.closest('[data-t]'); if(!b) return;
+  const t=THEMES.find(x=>x.id===b.dataset.t);
+  const gs=targetGroups();
+  for(const g of gs){ const gr=G(g);
+    Object.assign(gr.centro,t.c,{on:true}); Object.assign(gr.marco,t.m,{on:true}); gr.theme=t.id;
+    for(const id of driversOf(g,'ambos')) if(live[id]) live[id].hold=performance.now()+800;
+  }
+  save(); renderDisplay(); toast('Tema: '+t.name);
+  for(const g of gs) for(const zn of ['centro','marco']) await sendZone(g,zn,'power');
+};
+function markTheme(){ const th=G(S.current).theme; $$('#themes .th').forEach(b=>b.classList.toggle('on',b.dataset.t===th)); }
+
+/* ===================== Dibujo ===================== */
+(function waves(){
+  const g=$('#waves'); let h='';
+  for(let i=0;i<34;i++){
+    const y0=20+i*12.5, a=4+ (i%5)*1.6, ph=i*0.55;
+    let d=`M20 ${y0}`;
+    for(let x=20;x<=182;x+=6){ const y=y0+Math.sin(x/22+ph)*a+Math.sin(x/9+ph*2)*1.4; d+=` L${x} ${y.toFixed(1)}`; }
+    h+=`<path d="${d}"/>`;
+  }
+  g.innerHTML=h;
+})();
+function lit(z){ // color efectivo para previsualizar
+  if(!z.on) return '#2a3133';
+  let [r,g,b]=hex2rgb(z.color); const k=0.25+0.75*z.bright/100;
+  if(z.effect) return null;
+  return `rgb(${r*k|0},${g*k|0},${b*k|0})`;
+}
+let animT=null;
+function renderDisplay(){
+  const gr=G(S.current), m=gr.marco, c=gr.centro;
+  const paint=(z,setter)=>{ const col=lit(z); setter(col||'#ffffff'); return !col; };
+  const anim=[];
+  if(paint(m,col=>{['#marcoGlow','#marcoCore','#marcoInner'].forEach(s=>$(s).setAttribute('stroke',col)); $('#dotM').style.background=col;})) anim.push('m');
+  if(paint(c,col=>{['#badge','#badgeGlow'].forEach(s=>{$(s).setAttribute('fill',col);$(s).setAttribute('stroke',col);}); $('#ring').setAttribute('stroke',col); $('#dotC').style.background=col;})) anim.push('c');
+  $('#marcoGlow').style.opacity=m.on?1:.15; $('#badgeGlow').style.opacity=c.on?.75:0;
+  $('#infM').textContent = m.on ? (m.effect?effName(m.effect):colorName(m.color))+' · '+m.bright+'%' : 'Apagado';
+  $('#infC').textContent = c.on ? (c.effect?effName(c.effect):colorName(c.color))+' · '+c.bright+'%' : 'Apagado';
+  clearInterval(animT);
+  if(anim.length){ let h=0; animT=setInterval(()=>{ h=(h+7)%360; const t=performance.now();
+    const colFor=z=>{ if(isSW(z)){ const k=breathLevel(z,t); const [r,g,b]=hex2rgb(z.color).map(v=>v*(0.12+0.88*k)*(0.25+0.75*z.bright/100)|0); return `rgb(${r},${g},${b})`; } return `hsl(${h},90%,55%)`; };
+    if(anim.includes('m')){ const col=colFor(m); ['#marcoGlow','#marcoCore','#marcoInner'].forEach(s=>$(s).setAttribute('stroke',col)); }
+    if(anim.includes('c')){ const col=colFor(c); ['#badge','#badgeGlow'].forEach(s=>{$(s).setAttribute('fill',col);$(s).setAttribute('stroke',col);}); $('#ring').setAttribute('stroke',col);} },60); }
+  markTheme();
+  // controles
+  const z = S.zone==='centro'?c:m;
+  $('#picker').value=z.color; $('#bright').value=z.bright; $('#brVal').textContent=z.bright;
+  $('#effect').value=z.effect||''; $('#speed').value=z.speed; $('#spVal').textContent=z.speed;
+  $('#zoneLbl').textContent={marco:'Perímetro',centro:'Q',ambos:'Q y perímetro'}[S.zone];
+}
+function renderChips(){
+  const gl=groupList(); if(!gl.includes(S.current)) S.current=gl[0];
+  $('#grpChips').innerHTML=gl.map(g=>{
+    const n=driversOf(g,'ambos'), on=n.filter(i=>live[i]?.char).length;
+    const ok=driversOf(g,'centro').length&&driversOf(g,'marco').length; return `<button class="chip ${g===S.current?'on':''}" data-g="${g}">${g} <small>${ok?'Q+P':'incompleto'} · ${on}/${n.length}</small></button>`;
+  }).join('');
+}
+function renderStatus(){
+  const n=Object.values(live).filter(l=>l.char).length;
+  $('#btState').textContent = n? n+' conectado'+(n>1?'s':'') : 'Sin conexión';
+  $('#btState').classList.toggle('ok',!!n);
+  renderChips();
+}
+function renderDrivers(){
+  const ids=Object.keys(S.drivers);
+  if(!ids.length){ $('#drvList').innerHTML='<p class="mut" style="margin:0">Aún no hay drivers. Toca “Agregar driver”, elige el driver y asígnale su nombre (Q o Perímetro).</p>'; return; }
+  const byG={}; ids.forEach(id=>{ const g=parseCode(S.drivers[id].code).group; (byG[g]=byG[g]||[]).push(id); });
+  $('#drvList').innerHTML = Object.keys(byG).sort().map(g=>`<h2 style="margin-top:6px">Exhibidor ${g} ${pairMark(g)}</h2>`+byG[g].map(id=>{
+    const d=S.drivers[id], st=live[id]?.state||'off', z=parseCode(d.code).zone;
+    return `<div class="drv"><span class="st ${st}"></span><div class="grow"><b>${esc(d.code)}</b><br><small>${z==='marco'?'Perímetro':'Q'} · ${d.order||'RGB'}</small></div>
+      <button data-conn="${id}">${live[id]?.char?'Desconectar':'Conectar'}</button><button class="ghost" data-edit="${id}">Editar</button></div>`;
+  }).join('')).join('');
+}
+const effName=v=>{ const o=$('#effect').querySelector(`[value="${v}"]`); return o?o.text:'Efecto'; };
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ===================== Diálogo alta/edición ===================== */
+let editId=null, editDev=null;
+let fT='Q';
+function setT(t){ fT=t; $$('#fType button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); prev(); }
+function prev(){
+  const g=norm($('#fGroup').value)||'XB1'; $('#fPrev').textContent=nameFor(fT,g);
+  const k=g.replace(/[\s\-_]/g,''), other=fT==='Q'?'marco':'centro';
+  const ex=driversOf(k,other).filter(i=>i!==editId);
+  $('#fPair').textContent = ex.length ? '✓ Se enlaza con '+S.drivers[ex[0]].code : 'Aún no hay '+(fT==='Q'?'Perímetro':'Q')+' para este exhibidor';
+}
+$$('#fType button').forEach(b=>b.onclick=()=>setT(b.dataset.t));
+$('#fGroup').oninput=prev;
+function suggest(){
+  // completa el primer exhibidor al que le falte su par; si no, el siguiente número
+  const gs=groupList().filter(g=>g!=='DEMO');
+  for(const g of gs){ if(!driversOf(g,'centro').length) return ['Q',g]; if(!driversOf(g,'marco').length) return ['Perímetro',g]; }
+  let n=1; while(gs.includes('XB'+n)) n++; return ['Q','XB'+n];
+}
+function openDlg(id, dev){
+  editId=id; editDev=dev; const d=S.drivers[id]||{};
+  $('#dlgTitle').textContent = S.drivers[id]?'Editar driver':'Nuevo driver';
+  $('#dlgDev').textContent = S.drivers[id]?'':'Driver detectado: debe estar parpadeando';
+  if(d.code){ const p=parseCode(d.code); $('#fGroup').value=p.group; setT(p.zone==='centro'?'Q':'Perímetro'); }
+  else { const [t,g]=suggest(); $('#fGroup').value=g; setT(t); }
+  $('#fOrder').value=d.order||'RGB'; $('#fProto').value=d.proto||'auto';
+  $('#dlg').showModal();
+}
+$('#dlg').addEventListener('close',async()=>{
+  if($('#dlg').returnValue!=='ok') return;
+  const code=nameFor(fT,$('#fGroup').value);
+  S.drivers[editId]={...(S.drivers[editId]||{}), name:code, code, order:$('#fOrder').value, proto:$('#fProto').value, devName:editDev?.name||S.drivers[editId]?.devName};
+  const p=parseCode(code); G(p.group); S.current=p.group; save();
+  renderDrivers(); renderStatus(); renderDisplay();
+  const paired = driversOf(p.group,'centro').length && driversOf(p.group,'marco').length;
+  toast(paired ? '✓ Exhibidor '+p.group+' completo: Q + Perímetro enlazados' : code+' guardado. Falta su '+(fT==='Q'?'Perímetro':'Q'), 3000);
+  if(live[editId]?.char) await sendZone(p.group, p.zone, 'power');
+});
+$('#dlgTest').onclick=async()=>{
+  const id=editId; if(!live[id]?.char){ toast('El driver no está conectado'); return; }
+  const tmp={...(S.drivers[id]||{}), order:$('#fOrder').value, proto:$('#fProto').value}; const bak=S.drivers[id]; S.drivers[id]=tmp;
+  const v=protoVariant(id);
+  await write(id,P.on(v)); await write(id,P.bright(v,100));
+  for(const [c,n] of [[[255,0,0],'ROJO'],[[0,255,0],'VERDE'],[[0,0,255],'AZUL']]){ const [r,g,b]=orderRGB(c,tmp.order); await write(id,P.color(v,r,g,b)); toast('Debe verse '+n,900); await sleep(1000); }
+  S.drivers[id]=bak;
+};
+async function registerNew(dev){
+  const ok=await connect(dev);
+  if(ok){ const v=protoVariant(dev.id); for(let i=0;i<3;i++){ await write(dev.id,P.off(v)); await sleep(250); await write(dev.id,P.on(v)); await sleep(250);} }
+  openDlg(dev.id, dev);
+}
+
+/* ===================== Eventos ===================== */
+$$('nav button').forEach(b=>b.onclick=()=>{ $$('nav button').forEach(x=>x.classList.toggle('on',x===b)); $$('main>section').forEach(s=>s.classList.toggle('hide',s.id!==b.dataset.p)); });
+$('#grpChips').onclick=e=>{ const b=e.target.closest('[data-g]'); if(!b) return; S.current=b.dataset.g; save(); renderChips(); renderDisplay(); };
+const setZone=z=>{ S.zone=z; $$('.zb').forEach(b=>b.classList.toggle('sel',b.dataset.zone===z)); renderDisplay(); };
+$$('.zb').forEach(b=>b.onclick=()=>setZone(b.dataset.zone));
+$$('#disp .zone').forEach(g=>g.onclick=()=>setZone(g.dataset.zone));
+const PRE=['#41ffe6','#ffffff','#ff0000','#00ff00','#0000ff','#ffb000','#ff00ff','#7a3cff','#00a3ff','#ff5a1f','#ffe600','#ff2d78','#00ff9c','#9aff00','#ffd6a5','#1b4dff'];
+$('#sw').innerHTML=PRE.map(c=>c===BRAND?`<b style="background:${c};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#063;letter-spacing:.05em" data-c="${c}" title="IQOS">IQOS</b>`:`<b style="background:${c}" data-c="${c}"></b>`).join('');
+$('#sw').onclick=e=>{ const c=e.target.dataset.c; if(c) apply('color',z=>{z.color=c;if(!isSW(z))z.effect='';z.on=true;}); };
+$('#picker').oninput=e=>apply('color',z=>{z.color=e.target.value;if(!isSW(z))z.effect='';z.on=true;});
+$('#bright').oninput=e=>{ $('#brVal').textContent=e.target.value; apply('bright',z=>z.bright=+e.target.value); };
+$('#effect').onchange=e=>apply('effect',z=>{z.effect=e.target.value;z.on=true;});
+$('#speed').oninput=e=>{ $('#spVal').textContent=e.target.value; apply('speed',z=>z.speed=+e.target.value); };
+$('#bOn').onclick=()=>apply('power',z=>z.on=true);
+$('#bOff').onclick=()=>apply('power',z=>z.on=false);
+$('#bConnGroup').onclick=async()=>{
+  if(!hasBT) return toast('Bluetooth no disponible');
+  const ids=targetGroups().flatMap(g=>driversOf(g,'ambos'));
+  if(!ids.length) return toast('Este grupo no tiene drivers. Agrégalos en la pestaña Drivers.');
+  await reconnectIds(ids);
+  for(const g of targetGroups()) for(const zn of ['marco','centro']) await sendZone(g,zn,'power');
+};
+$('#bAdd').onclick=async()=>{
+  if(!hasBT) return toast('Bluetooth no disponible');
+  try{ const dev=await pickDevice();
+    if(S.drivers[dev.id]){ await connect(dev); toast('Ya registrado como '+S.drivers[dev.id].name+' ('+S.drivers[dev.id].code+')'); }
+    else await registerNew(dev);
+  }catch(e){ if(e.name!=='NotFoundError') toast(e.message); }
+};
+$('#bReconn').onclick=()=>hasBT?reconnectIds(Object.keys(S.drivers)):toast('Bluetooth no disponible');
+$('#drvList').onclick=async e=>{
+  const c=e.target.dataset.conn, ed=e.target.dataset.edit;
+  if(c){ if(live[c]?.char){ live[c].device.gatt.disconnect(); } else await reconnectIds([c]); const p=parseCode(S.drivers[c].code); if(live[c]?.char) await sendZone(p.group,p.zone,'power'); }
+  if(ed) openDlg(ed, live[ed]?.device);
+};
+$('#bExport').onclick=()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify({drivers:S.drivers,groups:S.groups},null,1)],{type:'application/json'})); a.download='drivers-exhibidor.json'; a.click(); };
+$('#bImport').onclick=()=>$('#fImport').click();
+$('#fImport').onchange=async e=>{ try{ const j=JSON.parse(await e.target.files[0].text()); Object.assign(S.drivers,j.drivers||{}); Object.assign(S.groups,j.groups||{}); save(); renderDrivers(); renderStatus(); renderDisplay(); toast('Lista importada'); }catch(x){ toast('Archivo no válido'); } };
+$('#optAll').checked=!!S.allDevices; $('#optAll').onchange=e=>{S.allDevices=e.target.checked; save();};
+$('#bWipe').onclick=()=>{ if(confirm('¿Borrar drivers y grupos guardados?')){ localStorage.removeItem(LS); location.reload(); } };
+
+/* Inicio */
+renderChips(); renderDisplay(); renderDrivers(); renderStatus();
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+// Pantalla de inicio
+// Reconexión automática: los drivers ya registrados se conectan solos al abrir la app
+(async()=>{
+  const known=await getKnownDevices();
+  for(const d of known){
+    if(!S.drivers[d.id]) continue;
+    live[d.id]={device:d,state:'busy'}; renderDrivers();
+    try{
+      if(d.watchAdvertisements){
+        const ac=new AbortController();
+        d.addEventListener('advertisementreceived',async()=>{ ac.abort(); if(!live[d.id]?.char && await connect(d)){ const p=parseCode(S.drivers[d.id].code); await sendZone(p.group,p.zone,'power'); } },{once:true});
+        await d.watchAdvertisements({signal:ac.signal});
+        setTimeout(()=>{ ac.abort(); if(!live[d.id]?.char){ live[d.id].state='off'; renderDrivers(); } },15000);
+      } else if(await connect(d)){ const p=parseCode(S.drivers[d.id].code); await sendZone(p.group,p.zone,'power'); }
+    }catch(e){ live[d.id].state='off'; renderDrivers(); }
+  }
+})();
+</script>
+</body>
+</html>

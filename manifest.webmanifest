@@ -1,0 +1,19 @@
+{
+  "id": "/xbglobal-control-led",
+  "name": "XB Global Control LED",
+  "short_name": "XB Control",
+  "description": "Control de iluminación para exhibidores XB Global.",
+  "lang": "es-MX",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f8f8",
+  "theme_color": "#082520",
+  "categories": ["business", "utilities"],
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
