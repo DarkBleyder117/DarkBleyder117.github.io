@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.xbglobal.controlled",
+        "sha256_cert_fingerprints": ["29:20:8B:8C:D4:E2:5D:75:5B:26:71:6C:1F:71:D9:61:E1:A8:E6:1E:17:83:8A:82:36:8C:E0:5E:B6:4D:45:EE"]
+      }
+    }]
