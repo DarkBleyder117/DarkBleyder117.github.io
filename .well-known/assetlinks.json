@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "com.xbglobal.controlled",
-        "sha256_cert_fingerprints": ["29:20:8B:8C:D4:E2:5D:75:5B:26:71:6C:1F:71:D9:61:E1:A8:E6:1E:17:83:8A:82:36:8C:E0:5E:B6:4D:45:EE"]
+        "sha256_cert_fingerprints": ["35:8D:C8:EB:DF:13:CC:46:E5:FF:67:2E:9C:58:43:FE:DC:55:DF:81:3F:B5:D1:94:B4:BA:B9:B6:B3:AE:37:35"]
       }
     }]
